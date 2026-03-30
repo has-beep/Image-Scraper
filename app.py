@@ -28,13 +28,39 @@ def scrape():
             
             # Navigate and wait for DOM instead of networkidle to prevent ad-tracker timeouts
             try:
-                page.goto(target_url, wait_until='domcontentloaded', timeout=20000)
+                response = page.goto(target_url, wait_until='domcontentloaded', timeout=20000)
+                if response and response.status in [401, 403]:
+                    raise Exception(f"The website actively blocked the scraper (HTTP {response.status} Access Denied).")
+                
+                # Check for common bot-protection challenge titles
+                page_title = page.title()
+                if any(x in page_title for x in ["Just a moment...", "Attention Required!", "Security |", "Access Denied"]):
+                    raise Exception("The website restricted access via a Captcha or Bot Challenge.")
             except Exception as e:
-                print(f"Warning: navigation timeout: {e}")
+                # If we explicitly raised an anti-bot exception, bubble it up
+                if "blocked" in str(e) or "restricted" in str(e):
+                    raise e
+                print(f"Warning: navigation issue: {e}")
             
             # Scroll down to trigger lazy loading images common on wikis
             try:
-                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.evaluate("""
+                async () => {
+                    await new Promise((resolve) => {
+                        let totalHeight = 0;
+                        let distance = 800;
+                        let timer = setInterval(() => {
+                            let scrollHeight = document.body.scrollHeight;
+                            window.scrollBy(0, distance);
+                            totalHeight += distance;
+                            if(totalHeight >= scrollHeight - window.innerHeight){
+                                clearInterval(timer);
+                                resolve();
+                            }
+                        }, 200);
+                    });
+                }
+                """)
                 page.wait_for_timeout(1500)
             except:
                 pass
@@ -43,30 +69,27 @@ def scrape():
             images_data = page.evaluate("""
             () => {
                 let imagesData = new Map();
-                document.querySelectorAll('img').forEach(img => {
-                    let url = img.dataset.src || img.src;
-                    if (!url) return;
-                    if (url.startsWith('data:')) return;
+                
+                const processUrl = (url, element) => {
+                    if (!url || url.startsWith('data:')) return;
                     
                     let infoLines = [];
-                    
-                    if (img.alt && img.alt.length > 3 && !img.alt.includes('http')) infoLines.push(img.alt.trim());
-                    else if (img.title && img.title.length > 3) infoLines.push(img.title.trim());
+                    // Try to get alt or title context
+                    if (element.alt && element.alt.length > 3 && !element.alt.includes('http')) infoLines.push(element.alt.trim());
+                    else if (element.title && element.title.length > 3) infoLines.push(element.title.trim());
 
-                    let figure = img.closest('figure');
+                    // Contextual captions
+                    let figure = element.closest('figure');
                     if (figure) {
                         let caption = figure.querySelector('figcaption');
-                        if (caption && caption.innerText.trim()) {
-                            infoLines.push(caption.innerText.trim());
-                        }
+                        if (caption && caption.innerText.trim()) infoLines.push(caption.innerText.trim());
                     }
 
                     // Special handling for fandom wikis (portable infoboxes)
-                    let infobox = img.closest('aside.portable-infobox, .portable-infobox');
+                    let infobox = element.closest('aside.portable-infobox, .portable-infobox');
                     if (infobox) {
                         let titleEl = infobox.querySelector('.pi-title');
                         if (titleEl && titleEl.innerText.trim()) infoLines.push(titleEl.innerText.trim());
-                        
                         Array.from(infobox.querySelectorAll('.pi-data')).forEach(el => {
                             let label = el.querySelector('.pi-data-label');
                             let val = el.querySelector('.pi-data-value');
@@ -81,7 +104,42 @@ def scrape():
                     if (!imagesData.has(url) || finalInfo.length > (imagesData.get(url) || "").length) {
                         imagesData.set(url, finalInfo);
                     }
+                };
+
+                // 1. Standard img tags
+                document.querySelectorAll('img').forEach(img => {
+                    let url = img.dataset.src || img.dataset.lazySrc || img.src;
+                    processUrl(url, img);
+                    
+                    if (img.srcset) {
+                        img.srcset.split(',').forEach(item => {
+                            let parts = item.trim().split(' ');
+                            if (parts.length > 0) processUrl(parts[0], img);
+                        });
+                    }
                 });
+                
+                // 2. Picture sources
+                document.querySelectorAll('source').forEach(source => {
+                    if (source.srcset) {
+                        source.srcset.split(',').forEach(item => {
+                            let parts = item.trim().split(' ');
+                            if (parts.length > 0) processUrl(parts[0], source);
+                        });
+                    }
+                });
+
+                // 3. Background images
+                document.querySelectorAll('*').forEach(el => {
+                    let bg = window.getComputedStyle(el).backgroundImage;
+                    if (bg && bg !== 'none' && bg.includes('url(')) {
+                        let match = bg.match(/url\(["']?([^"')]+)["']?\)/);
+                        if (match && !match[1].startsWith('data:')) {
+                            processUrl(match[1], el);
+                        }
+                    }
+                });
+
                 return Array.from(imagesData.entries()).map(([url, info]) => ({url, info}));
             }
             """)

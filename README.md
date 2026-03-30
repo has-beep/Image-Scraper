@@ -9,6 +9,8 @@
 
 > A premium, local-first web application that visually scrapes, previews, and batch-downloads images from any website — including modern JavaScript-heavy SPAs and wiki pages.
 
+![Gravitas Scraper Preview](./preview.png)
+
 ---
 
 ## ✨ Features
