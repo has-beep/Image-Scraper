@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectAllBtn = document.getElementById('select-all-btn');
     const downloadBtn = document.getElementById('download-btn');
 
-    let scrapedUrls = [];
+    let scrapedImages = [];
     let selectedUrls = new Set();
 
     scrapeForm.addEventListener('submit', async (e) => {
@@ -36,9 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.error || 'Failed to scrape website');
             }
 
-            scrapedUrls = data.images;
+            scrapedImages = data.images;
             
-            if (scrapedUrls.length === 0) {
+            if (scrapedImages.length === 0) {
                 throw new Error('No images could be extracted from this URL.');
             }
 
@@ -59,13 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function renderGrid() {
-        scrapedUrls.forEach((url, idx) => {
+        scrapedImages.forEach(({url, info}, idx) => {
             const card = document.createElement('div');
             card.className = 'image-card selected'; // Default selected
             selectedUrls.add(url);
             
+            let infoHtml = '';
+            if (info) {
+                // Formatting newlines into breaks nicely for UI layout, cap the length slightly for very long infos
+                const displayInfo = info.length > 200 ? info.substring(0, 197) + '...' : info;
+                infoHtml = `<div class="image-info">${displayInfo.replace(/\\n/g, '<br>')}</div>`;
+            }
+
             card.innerHTML = `
                 <div class="checkbox-overlay"></div>
+                ${infoHtml}
                 <img src="${url}" alt="Extracted asset" loading="lazy" onerror="this.parentElement.style.display='none';">
             `;
 
@@ -135,10 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleLoading(downloadBtn, true);
 
         try {
+            // Gather correct items for selected URLs
+            const downloadItems = Array.from(selectedUrls).map(url => {
+                const imgObj = scrapedImages.find(img => img.url === url);
+                return imgObj ? imgObj : { url: url, info: '' };
+            });
+
             const res = await fetch('/api/download', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ urls: Array.from(selectedUrls) })
+                body: JSON.stringify({ items: downloadItems })
             });
 
             if (!res.ok) {
