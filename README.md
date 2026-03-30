@@ -5,15 +5,15 @@
   <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="MIT License">
 </p>
 
-# 🌀 Gravitas — Image Scraper
+# 🌀 Gravitas — Ultimate Bulk Image Scraper & Downloader
 
-> A premium, local-first web application that visually scrapes, previews, and batch-downloads images from any website — including modern JavaScript-heavy SPAs and wiki pages.
+> **Gravitas** is a premium, fast, and local-first web application built to **scrape, download, and copy images in bulk or one-by-one**. If you are looking for a high-quality **image scraper tool** to extract visual assets from modern JavaScript-heavy SPAs, a way to **batch download images** from wikis, or easily curate image collections, Gravitas offers a beautiful, accessible interface for seamless and fast web scraping.
 
 ![Gravitas Scraper Preview](./preview.png)
 
 ---
 
-## ✨ Features
+## ✨ Features: Fast, Accessible Image Scraping
 
 | Feature | Description |
 |---|---|
@@ -24,6 +24,12 @@
 | **Visual Selection Grid** | Browse all extracted images in a dynamic grid; click to select/deselect individual assets before downloading. |
 | **One-Click ZIP Export** | Selected images are packaged server-side into a single `.zip` file and streamed to your browser. |
 | **Lazy-Load Handling** | Auto-scrolls the target page to trigger lazy-loaded images common on wikis and galleries. |
+
+### 🎯 Common Use Cases
+- **Curate Collections:** The perfect app for users who want to get **images scraped, downloaded, or copied in bulk or one by one**.
+- **Data Collection:** Scrape images from websites to build high-quality machine learning datasets quickly.
+- **Content Archival:** Batch download original, uncompressed visual assets from wikis, Fandom pages, and blogs to your local machine.
+- **Design Inspiration:** Easily extract UI/UX visual assets from modern web applications.
 
 ---
 
@@ -211,3 +217,7 @@ This project is licensed under the [MIT License](LICENSE).
 <p align="center">
   Built with ☕ and curiosity.
 </p>
+
+<!-- 
+SEO Keywords: image scraper, image downloader, bulk image download, batch download images, scrape images from website, download images one by one, python image scraper, playwright scraper, open source image extractor, save images from url, visual web scraper, SPA image scraper 
+-->
