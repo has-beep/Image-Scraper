@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravitas - Image Scraper</title>
+    <!-- Use Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Ambient Background Blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <main class="container">
+        <header>
+            <h1>Gravitas Scraper</h1>
+            <p>Paste a link to extract and retrieve all visual assets inside.</p>
+        </header>
+
+        <section class="input-section glass-panel">
+            <form id="scrape-form">
+                <div class="input-group">
+                    <input type="url" id="url-input" placeholder="https://dribbble.com/..." required>
+                    <button type="submit" id="scrape-btn">
+                        <span class="btn-text">Extract</span>
+                        <div class="loader hidden"></div>
+                    </button>
+                </div>
+                <div id="error-message" class="error hidden"></div>
+            </form>
+        </section>
+
+        <!-- Dynamic Grid Section -->
+        <section id="results-section" class="hidden glass-panel">
+            <div class="results-header">
+                <h2>Extracted Assets</h2>
+                <div class="actions">
+                    <button id="select-all-btn" class="secondary-btn">Deselect All</button>
+                    <button id="download-btn" class="primary-btn">
+                        <span class="btn-text">Download Zip</span>
+                        <div class="loader hidden" id="download-loader"></div>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="image-grid" class="image-grid">
+                <!-- Images injected via JS -->
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
